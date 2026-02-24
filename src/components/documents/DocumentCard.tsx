@@ -50,7 +50,7 @@ export default function DocumentCard({ doc, viewMode }: DocumentCardProps) {
     try {
       document.execCommand("copy");
       toast.success("Đã sao chép đường dẫn thành công!");
-    } catch (err) {
+    } catch {
       toast.error("Không thể sao chép đường dẫn.");
     }
     document.body.removeChild(textArea);

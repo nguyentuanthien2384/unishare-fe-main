@@ -6,7 +6,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/solid";
-import { useMajors, useSubjects, Major } from "@/hooks/useCategories";
+import { useMajors, useSubjects } from "@/hooks/useCategories";
 
 interface FilterSidebarProps {
   isOpen: boolean;

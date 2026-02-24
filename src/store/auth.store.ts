@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import api from "@/lib/axios";
+// TODO: Bỏ comment khi có backend thật
+// import api from "@/lib/axios";
 import { User } from "@/@types/user.type";
 import { toast } from "react-hot-toast";
 
@@ -29,11 +30,12 @@ export const useAuthStore = create(
       setUser: (user) => set({ user }),
 
       // TODO: Bỏ mock này khi có backend thật
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       login: async (email, _password) => {
         const mockUser: User = {
           _id: "mock-user-001",
           email,
-          fullName: "Nguyen Van Test",
+          fullName: "Nguyen Tuấn Thiền",
           role: "USER",
           status: "ACTIVE",
           joinedDate: new Date().toISOString(),

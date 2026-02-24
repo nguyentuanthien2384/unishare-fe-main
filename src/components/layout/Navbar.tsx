@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuthStore } from "@/store/auth.store";
 import { Menu, Transition } from "@headlessui/react";
 import { Fragment } from "react";
@@ -70,10 +71,12 @@ export default function Navbar() {
               <div>
                 <Menu.Button className="flex items-center justify-center w-10 h-10 font-semibold bg-gray-300 rounded-full text-gray-700">
                   {user.avatarUrl ? (
-                    <img
+                    <Image
                       src={user.avatarUrl}
                       alt={user.fullName}
-                      className="w-10 h-10 rounded-full object-cover"
+                      width={40}
+                      height={40}
+                      className="rounded-full object-cover"
                     />
                   ) : (
                     getAvatarFallback()
