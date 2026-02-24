@@ -7,7 +7,7 @@ import { Toaster } from "react-hot-toast";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PUshare",
+  title: "UniShare",
   description: "Nền tảng chia sẻ tài liệu",
 };
 

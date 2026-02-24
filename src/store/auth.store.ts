@@ -28,18 +28,21 @@ export const useAuthStore = create(
       // ✅ thêm setUser
       setUser: (user) => set({ user }),
 
-      login: async (email, password) => {
-        try {
-          const response = await api.post("/auth/login", { email, password });
-          const { user, accessToken } = response.data;
-          set({ user, token: accessToken, isAuthenticated: true });
-          toast.success("Đăng nhập thành công!");
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
-          toast.error(
-            error.response?.data?.message || "Email hoặc mật khẩu không đúng",
-          );
-        }
+      // TODO: Bỏ mock này khi có backend thật
+      login: async (email, _password) => {
+        const mockUser: User = {
+          _id: "mock-user-001",
+          email,
+          fullName: "Nguyen Van Test",
+          role: "USER",
+          status: "ACTIVE",
+          joinedDate: new Date().toISOString(),
+          uploadsCount: 5,
+          downloadsCount: 12,
+        };
+        const mockToken = "mock-token-abc123";
+        set({ user: mockUser, token: mockToken, isAuthenticated: true });
+        toast.success("Đăng nhập thành công! (mock)");
       },
 
       logout: () => {
