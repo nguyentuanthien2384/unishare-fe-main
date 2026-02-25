@@ -8,8 +8,8 @@ import { useDeleteDocument } from "@/hooks/useMutateDocument";
 import EditDocumentModal from "@/components/profile/EditDocumentModal";
 import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
 import EditProfileModal from "@/components/profile/EditProfileModal";
-
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { useAuthStore } from "@/store/auth.store";
 import ChangePasswordModal from "@/components/profile/ChangePasswordModal";
 
 // --- TÁCH COMPONENT MyDocumentListItem RA ---
@@ -70,7 +70,9 @@ export default function MyProfilePage() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isChangePassOpen, setIsChangePassOpen] = useState(false);
 
-  const { data: user } = useMyProfile();
+  const { data: apiUser } = useMyProfile();
+  const storeUser = useAuthStore((s) => s.user);
+  const user = apiUser ?? storeUser;
 
   // --- HÀM XỬ LÝ MODAL ---
   const handleEditClick = (doc: Document) => {
@@ -94,11 +96,14 @@ export default function MyProfilePage() {
     }
   };
 
+  if (!user) {
+    return <div className="p-8 text-center text-gray-500">Đang tải thông tin người dùng...</div>;
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
-      {/* 1. Header và Stats */}
       <ProfileHeader
-        user={user!} // thêm "!" để khẳng định chắc chắn có user
+        user={user}
         onEditClick={() => setIsEditProfileOpen(true)}
         onChangePassClick={() => setIsChangePassOpen(true)}
       />

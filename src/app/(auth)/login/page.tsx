@@ -18,8 +18,13 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await login(email, password);
-    setIsLoading(false);
+    try {
+      await login(email, password);
+    } catch {
+      // Lỗi đã được hiển thị qua toast trong store
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {

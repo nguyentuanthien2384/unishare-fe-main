@@ -45,7 +45,7 @@ export default function Navbar() {
           <>
             {isModeratorOrAdmin && (
               <Link
-                href="/admin/manage"
+                href="/admin/manager"
                 className="px-4 py-2 font-semibold text-gray-700 rounded-full hover:bg-gray-100"
               >
                 Quản lý
