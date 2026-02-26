@@ -1,29 +1,16 @@
 "use client";
 import { useState, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAdminMajors, useAdminSubjects, Major } from "@/hooks/useAdminData";
-import api from "@/lib/axios";
+import { useAdminStore } from "@/store/admin.store";
 import { toast } from "react-hot-toast";
-import axios from "axios";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
 
-interface ApiErrorResponse {
-  message?: string;
-}
-
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (axios.isAxiosError<ApiErrorResponse>(error)) {
-    return error.response?.data?.message || fallback;
-  }
-  return fallback;
-};
-
 export default function ManageMajors() {
-  const queryClient = useQueryClient();
   const { data: majors, isLoading: isLoadingMajors } = useAdminMajors();
   const { data: allSubjects, isLoading: isLoadingSubjects } =
     useAdminSubjects();
+  const { addMajor, updateMajor, deleteMajor } = useAdminStore();
 
   const [name, setName] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
@@ -63,37 +50,25 @@ export default function ManageMajors() {
     setSelectedSubjects([]);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { name, subjects: selectedSubjects };
-
-    try {
-      if (editingMajor) {
-        await api.patch(`/admin/majors/${editingMajor._id}`, payload);
-        toast.success("Cập nhật ngành học thành công!");
-        handleCancelEdit();
-      } else {
-        await api.post("/admin/majors", payload);
-        toast.success("Đã tạo ngành học mới!");
-      }
-
-      queryClient.invalidateQueries({ queryKey: ["adminMajors"] });
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, "Thao tác thất bại"));
+    if (editingMajor) {
+      updateMajor(editingMajor._id, name, selectedSubjects);
+      toast.success("Cập nhật ngành học thành công!");
+      handleCancelEdit();
+    } else {
+      addMajor(name, selectedSubjects);
+      toast.success("Đã tạo ngành học mới!");
+      setName("");
+      setSelectedSubjects([]);
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteModal.major) return;
-
-    try {
-      await api.delete(`/admin/majors/${deleteModal.major._id}`);
-      toast.success("Đã xóa ngành học!");
-      queryClient.invalidateQueries({ queryKey: ["adminMajors"] });
-      setDeleteModal({ isOpen: false, major: null });
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, "Xóa thất bại"));
-    }
+    deleteMajor(deleteModal.major._id);
+    toast.success("Đã xóa ngành học!");
+    setDeleteModal({ isOpen: false, major: null });
   };
 
   return (

@@ -1,71 +1,37 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "@/lib/axios";
 import { toast } from "react-hot-toast";
-import axios from "axios";
+import { useAdminStore } from "@/store/admin.store";
+import { useCallback } from "react";
 
-interface ApiErrorResponse {
-  message?: string;
-}
-
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (axios.isAxiosError<ApiErrorResponse>(error)) {
-    return error.response?.data?.message || fallback;
-  }
-  return fallback;
-};
-
-const useInvalidateAdminDocs = () => {
-  const queryClient = useQueryClient();
-  return () => {
-    queryClient.invalidateQueries({ queryKey: ["adminDocuments"] });
-    queryClient.invalidateQueries({ queryKey: ["documents"] });
+export const useBlockDocument = () => {
+  const blockDoc = useAdminStore((s) => s.blockDocument);
+  return {
+    mutate: (docId: string) => {
+      blockDoc(docId);
+      toast.success("Đã block tài liệu!");
+    },
+    isPending: false,
   };
 };
 
-const blockDocument = async (docId: string) => {
-  return api.post(`/admin/documents/${docId}/block`);
-};
-export const useBlockDocument = () => {
-  const invalidate = useInvalidateAdminDocs();
-  return useMutation({
-    mutationFn: blockDocument,
-    onSuccess: () => {
-      toast.success("Đã block tài liệu!");
-      invalidate();
-    },
-    onError: (err: unknown) =>
-      toast.error(getErrorMessage(err, "Block thất bại")),
-  });
-};
-
-const unblockDocument = async (docId: string) => {
-  return api.post(`/admin/documents/${docId}/unblock`);
-};
 export const useUnblockDocument = () => {
-  const invalidate = useInvalidateAdminDocs();
-  return useMutation({
-    mutationFn: unblockDocument,
-    onSuccess: () => {
+  const unblockDoc = useAdminStore((s) => s.unblockDocument);
+  return {
+    mutate: (docId: string) => {
+      unblockDoc(docId);
       toast.success("Đã unblock tài liệu!");
-      invalidate();
     },
-    onError: (err: unknown) =>
-      toast.error(getErrorMessage(err, "Unblock thất bại")),
-  });
+    isPending: false,
+  };
 };
 
-const deleteDocument = async (docId: string) => {
-  return api.delete(`/admin/documents/${docId}`);
-};
 export const useDeleteDocumentAdmin = () => {
-  const invalidate = useInvalidateAdminDocs();
-  return useMutation({
-    mutationFn: deleteDocument,
-    onSuccess: () => {
+  const deleteDoc = useAdminStore((s) => s.deleteDocument);
+  const mutate = useCallback(
+    (docId: string) => {
+      deleteDoc(docId);
       toast.success("Đã xóa vĩnh viễn tài liệu!");
-      invalidate();
     },
-    onError: (err: unknown) =>
-      toast.error(getErrorMessage(err, "Xóa thất bại")),
-  });
+    [deleteDoc],
+  );
+  return { mutate, isPending: false };
 };

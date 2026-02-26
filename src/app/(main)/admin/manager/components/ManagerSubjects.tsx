@@ -1,27 +1,14 @@
 "use client";
 import { useState, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAdminSubjects, Subject } from "@/hooks/useAdminData";
-import api from "@/lib/axios";
+import { useAdminStore } from "@/store/admin.store";
 import { toast } from "react-hot-toast";
-import axios from "axios";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
 
-interface ApiErrorResponse {
-  message?: string;
-}
-
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (axios.isAxiosError<ApiErrorResponse>(error)) {
-    return error.response?.data?.message || fallback;
-  }
-  return fallback;
-};
-
 export default function ManageSubjects() {
-  const queryClient = useQueryClient();
   const { data: subjects, isLoading } = useAdminSubjects();
+  const { addSubject, updateSubject, deleteSubject } = useAdminStore();
 
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
@@ -58,37 +45,26 @@ export default function ManageSubjects() {
     setManagingFaculty("");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { name, code, managingFaculty };
-
-    try {
-      if (editingSubject) {
-        await api.patch(`/admin/subjects/${editingSubject._id}`, payload);
-        toast.success("Cập nhật môn học thành công!");
-        handleCancelEdit();
-      } else {
-        await api.post("/admin/subjects", payload);
-        toast.success("Đã tạo môn học mới!");
-      }
-
-      queryClient.invalidateQueries({ queryKey: ["adminSubjects"] });
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, "Thao tác thất bại"));
+    if (editingSubject) {
+      updateSubject(editingSubject._id, { name, code, managingFaculty });
+      toast.success("Cập nhật môn học thành công!");
+      handleCancelEdit();
+    } else {
+      addSubject({ name, code, managingFaculty });
+      toast.success("Đã tạo môn học mới!");
+      setName("");
+      setCode("");
+      setManagingFaculty("");
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteModal.subject) return;
-
-    try {
-      await api.delete(`/admin/subjects/${deleteModal.subject._id}`);
-      toast.success("Đã xóa môn học!");
-      queryClient.invalidateQueries({ queryKey: ["adminSubjects"] });
-      setDeleteModal({ isOpen: false, subject: null });
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, "Xóa thất bại"));
-    }
+    deleteSubject(deleteModal.subject._id);
+    toast.success("Đã xóa môn học!");
+    setDeleteModal({ isOpen: false, subject: null });
   };
 
   return (
