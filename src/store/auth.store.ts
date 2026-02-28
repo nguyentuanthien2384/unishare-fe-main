@@ -2,28 +2,24 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { User } from "@/@types/user.type";
 import { toast } from "react-hot-toast";
-
-const DEFAULT_PASSWORD = "123456";
+import api from "@/lib/axios";
 
 interface AuthState {
   user: User | null;
   token: string | null;
-  password: string;
   isAuthenticated: boolean;
   _hasHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   setHasHydrated: (hasHydrated: boolean) => void;
   setUser: (user: User) => void;
-  changePassword: (oldPassword: string, newPassword: string) => void;
 }
 
 export const useAuthStore = create(
   persist<AuthState>(
-    (set, get) => ({
+    (set) => ({
       user: null,
       token: null,
-      password: DEFAULT_PASSWORD,
       isAuthenticated: false,
       _hasHydrated: false,
 
@@ -32,33 +28,16 @@ export const useAuthStore = create(
       setUser: (user) => set({ user }),
 
       login: async (email, password) => {
-        const currentPassword = get().password;
-        if (password !== currentPassword) {
-          toast.error("Mật khẩu không đúng!");
-          throw new Error("Mật khẩu không đúng");
+        try {
+          const response = await api.post("/auth/login", { email, password });
+          const { accessToken, user } = response.data;
+          set({ user, token: accessToken, isAuthenticated: true });
+          toast.success("Đăng nhập thành công!");
+        } catch (error: unknown) {
+          const err = error as { response?: { data?: { message?: string } } };
+          toast.error(err.response?.data?.message || "Đăng nhập thất bại!");
+          throw error;
         }
-
-        const mockUser: User = {
-          _id: "mock-user-001",
-          email,
-          fullName: "Nguyen Tuấn Thiền",
-          role: "ADMIN",
-          status: "ACTIVE",
-          joinedDate: new Date().toISOString(),
-          uploadsCount: 5,
-          downloadsCount: 12,
-        };
-        const mockToken = "mock-token-abc123";
-        set({ user: mockUser, token: mockToken, isAuthenticated: true });
-        toast.success("Đăng nhập thành công!");
-      },
-
-      changePassword: (oldPassword, newPassword) => {
-        const currentPassword = get().password;
-        if (oldPassword !== currentPassword) {
-          throw new Error("Mật khẩu cũ không đúng!");
-        }
-        set({ password: newPassword });
       },
 
       logout: () => {

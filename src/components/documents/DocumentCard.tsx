@@ -132,7 +132,7 @@ const GridLayout = ({
   <div className="relative p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
     <div className="h-32 flex items-center justify-center bg-blue-50 rounded-lg">
       <span className="absolute top-2 left-2 px-2 py-1 text-xs font-semibold text-blue-800 uppercase bg-blue-100 rounded">
-        {formatFileType(doc.fileType)}
+        {formatFileType(doc.fileType || "application/pdf")}
       </span>
       <DocumentIcon className="w-12 h-12 text-blue-500" />
     </div>
@@ -161,13 +161,13 @@ const GridLayout = ({
     <div className="flex items-center justify-between mt-4">
       <div className="flex items-center text-sm text-gray-500">
         <Link
-          href={`/profile/${doc.uploader._id}`} // <-- LINK MỚI
+          href={`/profile/${doc.uploader?._id || ""}`}
           className="flex items-center text-sm text-gray-500 hover:text-blue-600 group"
         >
           <span className="flex items-center justify-center w-6 h-6 mr-2 text-xs font-semibold bg-green-200 rounded-full text-green-700">
-            {doc.uploader.fullName.substring(0, 2).toUpperCase()}
+            {(doc.uploader?.fullName || "??").substring(0, 2).toUpperCase()}
           </span>
-          <span>{doc.uploader.fullName}</span>
+          <span>{doc.uploader?.fullName || "Unknown"}</span>
         </Link>
       </div>
       <span className="flex items-center text-sm font-medium text-gray-600">
@@ -194,7 +194,7 @@ const ListLayout = ({
       <p className="text-sm text-gray-600">{doc.description}</p>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-sm text-gray-500">
         <Link
-          href={`/profile/${doc.uploader._id}`} // <-- LINK MỚI
+          href={`/profile/${doc.uploader?._id || ""}`}
           className="flex items-center hover:text-blue-600 group"
         >
           <span className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">
@@ -205,9 +205,9 @@ const ListLayout = ({
           </span>
           <span className="flex items-center">
             <span className="flex items-center justify-center w-5 h-5 mr-1 text-xs font-semibold bg-green-200 rounded-full text-green-700">
-              {doc.uploader.fullName.substring(0, 2).toUpperCase()}
+              {(doc.uploader?.fullName || "??").substring(0, 2).toUpperCase()}
             </span>
-            {doc.uploader.fullName}
+            {doc.uploader?.fullName || "Unknown"}
           </span>
         </Link>
         <span>{new Date(doc.uploadDate).toLocaleDateString()}</span>

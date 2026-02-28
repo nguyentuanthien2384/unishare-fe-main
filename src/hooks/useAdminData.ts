@@ -1,9 +1,5 @@
-import { useMemo } from "react";
-import {
-  useAdminStore,
-  Subject,
-  Major,
-} from "@/store/admin.store";
+import { useEffect, useMemo } from "react";
+import { useAdminStore, Subject, Major } from "@/store/admin.store";
 import { User } from "@/@types/user.type";
 import { Document as DocType } from "@/@types/document.type";
 
@@ -21,44 +17,54 @@ interface AdminDocumentsResponse {
 
 export const useAdminSubjects = () => {
   const subjects = useAdminStore((s) => s.subjects);
+  const fetchSubjects = useAdminStore((s) => s.fetchSubjects);
+  useEffect(() => {
+    if (subjects.length === 0) fetchSubjects();
+  }, [subjects.length, fetchSubjects]);
   return { data: subjects, isLoading: false };
 };
 
 export const useAdminMajors = () => {
   const majors = useAdminStore((s) => s.majors);
+  const fetchMajors = useAdminStore((s) => s.fetchMajors);
+  useEffect(() => {
+    if (majors.length === 0) fetchMajors();
+  }, [majors.length, fetchMajors]);
   return { data: majors, isLoading: false };
 };
 
 export const useAdminDocuments = (search: string) => {
   const documents = useAdminStore((s) => s.documents);
-  const filtered = useMemo(() => {
-    if (!search) return documents;
-    const q = search.toLowerCase();
-    return documents.filter((d) => d.title.toLowerCase().includes(q));
-  }, [documents, search]);
+  const fetchDocuments = useAdminStore((s) => s.fetchDocuments);
 
-  const result: AdminDocumentsResponse = {
-    data: filtered,
-    pagination: { total: filtered.length },
-  };
+  useEffect(() => {
+    fetchDocuments(search);
+  }, [search, fetchDocuments]);
+
+  const result: AdminDocumentsResponse = useMemo(
+    () => ({
+      data: documents,
+      pagination: { total: documents.length },
+    }),
+    [documents],
+  );
   return { data: result, isLoading: false };
 };
 
 export const useAdminUsers = (search: string) => {
   const users = useAdminStore((s) => s.users);
-  const filtered = useMemo(() => {
-    if (!search) return users;
-    const q = search.toLowerCase();
-    return users.filter(
-      (u) =>
-        u.fullName.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q),
-    );
-  }, [users, search]);
+  const fetchUsers = useAdminStore((s) => s.fetchUsers);
 
-  const result: AdminUsersResponse = {
-    data: filtered,
-    pagination: { total: filtered.length },
-  };
+  useEffect(() => {
+    fetchUsers(search);
+  }, [search, fetchUsers]);
+
+  const result: AdminUsersResponse = useMemo(
+    () => ({
+      data: users,
+      pagination: { total: users.length },
+    }),
+    [users],
+  );
   return { data: result, isLoading: false };
 };
