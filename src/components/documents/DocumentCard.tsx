@@ -129,14 +129,22 @@ const GridLayout = ({
   onDownload,
   onReport,
 }: LayoutProps) => (
-  <div className="relative p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-    <div className="h-32 flex items-center justify-center bg-blue-50 rounded-lg">
-      <span className="absolute top-2 left-2 px-2 py-1 text-xs font-semibold text-blue-800 uppercase bg-blue-100 rounded">
-        {formatFileType(doc.fileType || "application/pdf")}
-      </span>
-      <DocumentIcon className="w-12 h-12 text-blue-500" />
-    </div>
-    <div className="absolute top-4 right-4">
+  <div className="relative p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 group">
+    <Link href={`/document/${doc._id}`} className="block">
+      <div className="h-32 flex items-center justify-center bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
+        <span className="absolute top-2 left-2 px-2 py-1 text-xs font-semibold text-blue-800 uppercase bg-blue-100 rounded">
+          {formatFileType(doc.fileType || "application/pdf")}
+        </span>
+        <DocumentIcon className="w-12 h-12 text-blue-500" />
+      </div>
+      <h3 className="mt-4 text-lg font-semibold truncate text-gray-900 group-hover:text-blue-600 transition-colors">
+        {doc.title}
+      </h3>
+      <p className="h-10 mt-1 text-sm text-gray-600 overflow-hidden text-ellipsis">
+        {doc.description}
+      </p>
+    </Link>
+    <div className="absolute top-4 right-4 z-10">
       <DocumentMenu
         onPreview={onPreview}
         onShare={onShare}
@@ -144,12 +152,6 @@ const GridLayout = ({
         onReport={onReport}
       />
     </div>
-    <h3 className="mt-4 text-lg font-semibold truncate text-gray-900">
-      {doc.title}
-    </h3>
-    <p className="h-10 mt-1 text-sm text-gray-600 overflow-hidden text-ellipsis">
-      {doc.description}
-    </p>
     <div className="flex gap-2 mt-3">
       <span className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">
         {doc.subject?.name || "General"}
@@ -162,7 +164,7 @@ const GridLayout = ({
       <div className="flex items-center text-sm text-gray-500">
         <Link
           href={`/profile/${doc.uploader?._id || ""}`}
-          className="flex items-center text-sm text-gray-500 hover:text-blue-600 group"
+          className="flex items-center text-sm text-gray-500 hover:text-blue-600 group/uploader"
         >
           <span className="flex items-center justify-center w-6 h-6 mr-2 text-xs font-semibold bg-green-200 rounded-full text-green-700">
             {(doc.uploader?.fullName || "??").substring(0, 2).toUpperCase()}
@@ -185,18 +187,17 @@ const ListLayout = ({
   onDownload,
   onReport,
 }: LayoutProps) => (
-  <div className="relative flex items-center w-full p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-    <div className="flex items-center justify-center w-16 h-16 bg-blue-50 rounded-lg">
-      <DocumentIcon className="w-8 h-8 text-blue-500" />
-    </div>
-    <div className="flex-1 mx-4">
-      <h3 className="text-lg font-semibold text-gray-900">{doc.title}</h3>
-      <p className="text-sm text-gray-600">{doc.description}</p>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-sm text-gray-500">
-        <Link
-          href={`/profile/${doc.uploader?._id || ""}`}
-          className="flex items-center hover:text-blue-600 group"
-        >
+  <div className="relative flex items-center w-full p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 group">
+    <Link href={`/document/${doc._id}`} className="flex items-center flex-1">
+      <div className="flex items-center justify-center w-16 h-16 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
+        <DocumentIcon className="w-8 h-8 text-blue-500" />
+      </div>
+      <div className="flex-1 mx-4">
+        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+          {doc.title}
+        </h3>
+        <p className="text-sm text-gray-600">{doc.description}</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-sm text-gray-500">
           <span className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">
             {doc.subject?.name || "General"}
           </span>
@@ -209,14 +210,14 @@ const ListLayout = ({
             </span>
             {doc.uploader?.fullName || "Unknown"}
           </span>
-        </Link>
-        <span>{new Date(doc.uploadDate).toLocaleDateString()}</span>
-        <span>{formatDownloads(doc.downloadCount)} DLs</span>
-        <span>{formatFileType(doc.fileType)}</span>
-        <span>{(doc.fileSize / 1024 / 1024).toFixed(1)} MB</span>
+          <span>{new Date(doc.uploadDate).toLocaleDateString()}</span>
+          <span>{formatDownloads(doc.downloadCount)} DLs</span>
+          <span>{formatFileType(doc.fileType)}</span>
+          <span>{(doc.fileSize / 1024 / 1024).toFixed(1)} MB</span>
+        </div>
       </div>
-    </div>
-    <div className="absolute top-4 right-4">
+    </Link>
+    <div className="absolute top-4 right-4 z-10">
       <DocumentMenu
         onPreview={onPreview}
         onShare={onShare}

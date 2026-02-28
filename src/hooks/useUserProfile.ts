@@ -25,7 +25,7 @@ const getUserStats = async (userId: string): Promise<UserStats> => {
 };
 
 const getUserDocuments = async (userId: string): Promise<UserDocumentsResponse> => {
-  const response = await api.get(`/users/${userId}/documents`);
+  const response = await api.get(`/documents/user/${userId}/uploads`);
   return response.data;
 };
 
