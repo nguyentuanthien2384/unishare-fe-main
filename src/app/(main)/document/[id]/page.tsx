@@ -9,7 +9,6 @@ import {
   DocumentIcon,
   CalendarDaysIcon,
   AcademicCapIcon,
-  UserCircleIcon,
   ClockIcon,
   ShareIcon,
 } from "@heroicons/react/24/outline";
@@ -28,12 +27,11 @@ const formatFileType = (mimeType: string) => {
   if (mimeType.includes("pdf")) return "PDF";
   if (mimeType.includes("document")) return "DOCX";
   if (mimeType.includes("presentation")) return "PPTX";
-  if (mimeType.includes("image")) return "IMG";
   return "FILE";
 };
 
 const getFileColor = (mimeType: string) => {
-  if (!mimeType) return { bg: "bg-gray-100", text: "text-gray-600", badge: "bg-gray-500" };
+  if (!mimeType) return { bg: "bg-gray-50", text: "text-gray-600", badge: "bg-gray-500" };
   if (mimeType.includes("pdf")) return { bg: "bg-red-50", text: "text-red-600", badge: "bg-red-500" };
   if (mimeType.includes("document")) return { bg: "bg-blue-50", text: "text-blue-600", badge: "bg-blue-500" };
   if (mimeType.includes("presentation")) return { bg: "bg-orange-50", text: "text-orange-600", badge: "bg-orange-500" };
@@ -50,12 +48,8 @@ export default function DocumentDetailPage() {
     if (!doc) return;
     const toastId = toast.loading("Đang tải xuống...");
     try {
-      const response = await api.get(`/documents/${doc._id}/download`, {
-        responseType: "blob",
-      });
-      const blob = new Blob([response.data], {
-        type: response.headers["content-type"],
-      });
+      const response = await api.get(`/documents/${doc._id}/download`, { responseType: "blob" });
+      const blob = new Blob([response.data], { type: response.headers["content-type"] });
       const url = window.URL.createObjectURL(blob);
       const link = window.document.createElement("a");
       link.href = url;
@@ -87,12 +81,10 @@ export default function DocumentDetailPage() {
   if (isLoading) {
     return (
       <main className="flex-1 p-6 bg-gray-50">
-        <div className="max-w-4xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-1/3" />
-            <div className="h-64 bg-gray-200 rounded-xl" />
-            <div className="h-40 bg-gray-200 rounded-xl" />
-          </div>
+        <div className="max-w-4xl mx-auto animate-pulse space-y-6">
+          <div className="h-6 bg-gray-200 rounded w-24" />
+          <div className="h-64 bg-gray-200 rounded-2xl" />
+          <div className="h-40 bg-gray-200 rounded-2xl" />
         </div>
       </main>
     );
@@ -100,18 +92,14 @@ export default function DocumentDetailPage() {
 
   if (isError || !doc) {
     return (
-      <main className="flex-1 p-6 bg-gray-50">
-        <div className="max-w-4xl mx-auto text-center py-20">
+      <main className="flex-1 p-6 bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
           <DocumentIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">
-            Không tìm thấy tài liệu
-          </h2>
-          <p className="text-gray-500 mb-6">
-            Tài liệu này có thể đã bị xóa hoặc không tồn tại.
-          </p>
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">Không tìm thấy tài liệu</h2>
+          <p className="text-gray-500 mb-6 text-sm">Tài liệu này có thể đã bị xóa hoặc không tồn tại.</p>
           <button
             onClick={() => router.push("/")}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition"
           >
             Quay về trang chủ
           </button>
@@ -126,23 +114,23 @@ export default function DocumentDetailPage() {
   return (
     <main className="flex-1 p-6 bg-gray-50">
       <div className="max-w-4xl mx-auto">
-        {/* Back button */}
+        {/* Back */}
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-6 transition"
+          className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-blue-600 mb-6 transition group"
         >
-          <ArrowLeftIcon className="w-5 h-5" />
-          <span className="text-sm font-medium">Quay lại</span>
+          <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+          Quay lại
         </button>
 
-        {/* Header Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          {/* File type banner */}
+        {/* Main Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          {/* Banner */}
           <div className={`${colors.bg} px-8 py-10 flex items-center gap-6`}>
             <div className={`w-20 h-20 rounded-2xl ${colors.bg} border-2 border-white shadow-md flex items-center justify-center`}>
               <DocumentIcon className={`w-10 h-10 ${colors.text}`} />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-2">
                 <span className={`${colors.badge} text-white text-xs font-bold px-3 py-1 rounded-full uppercase`}>
                   {formatFileType(doc.fileType)}
@@ -151,22 +139,22 @@ export default function DocumentDetailPage() {
                   {formatFileSize(doc.fileSize)}
                 </span>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">{doc.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 truncate">{doc.title}</h1>
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* Actions */}
           <div className="px-8 py-4 border-b border-gray-100 flex flex-wrap gap-3">
             <button
               onClick={handleDownload}
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm"
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-medium text-sm shadow-sm"
             >
               <ArrowDownTrayIcon className="w-5 h-5" />
               Tải xuống
             </button>
             <button
               onClick={handleShare}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium text-sm"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-medium text-sm"
             >
               <ShareIcon className="w-5 h-5" />
               Chia sẻ
@@ -175,70 +163,88 @@ export default function DocumentDetailPage() {
 
           {/* Content */}
           <div className="px-8 py-6 space-y-6">
-            {/* Description */}
             {doc.description && (
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                  Mô tả
-                </h3>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Mô tả</h3>
                 <p className="text-gray-700 leading-relaxed">{doc.description}</p>
               </div>
             )}
 
-            {/* Info grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InfoItem
-                icon={<AcademicCapIcon className="w-5 h-5" />}
-                label="Môn học"
-                value={doc.subject?.name || "Chưa phân loại"}
-                subValue={doc.subject?.code}
-              />
-              <InfoItem
-                icon={<DocumentIcon className="w-5 h-5" />}
-                label="Loại tài liệu"
-                value={doc.documentType || "Khác"}
-              />
-              <InfoItem
-                icon={<CalendarDaysIcon className="w-5 h-5" />}
-                label="Năm học"
-                value={doc.schoolYear || "N/A"}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <InfoItem icon={<AcademicCapIcon className="w-5 h-5" />} label="Môn học" value={doc.subject?.name || "Chưa phân loại"} subValue={doc.subject?.code} />
+              <InfoItem icon={<DocumentIcon className="w-5 h-5" />} label="Loại tài liệu" value={doc.documentType || "Khác"} />
+              <InfoItem icon={<CalendarDaysIcon className="w-5 h-5" />} label="Năm học" value={doc.schoolYear || "N/A"} />
               <InfoItem
                 icon={<ClockIcon className="w-5 h-5" />}
                 label="Ngày đăng"
-                value={uploadDate.toLocaleDateString("vi-VN", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                })}
-                subValue={uploadDate.toLocaleTimeString("vi-VN", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                value={uploadDate.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                subValue={uploadDate.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
               />
             </div>
 
             {/* Stats */}
-            <div className="flex gap-6 pt-4 border-t border-gray-100">
-              <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex gap-8 pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-2">
                 <ArrowDownTrayIcon className="w-5 h-5 text-blue-500" />
-                <span className="text-lg font-bold text-gray-900">{doc.downloadCount}</span>
-                <span className="text-sm">lượt tải</span>
+                <span className="text-xl font-bold text-gray-900">{doc.downloadCount}</span>
+                <span className="text-sm text-gray-500">lượt tải</span>
               </div>
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2">
                 <EyeIcon className="w-5 h-5 text-green-500" />
-                <span className="text-lg font-bold text-gray-900">{doc.viewCount}</span>
-                <span className="text-sm">lượt xem</span>
+                <span className="text-xl font-bold text-gray-900">{doc.viewCount}</span>
+                <span className="text-sm text-gray-500">lượt xem</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Uploader Card */}
-        <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-            Người đăng
-          </h3>
+        {/* Document Preview */}
+        {doc.fileType?.includes("pdf") && (
+          <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <EyeIcon className="w-5 h-5 text-blue-500" />
+                Xem trước tài liệu
+              </h3>
+              <a
+                href={`${process.env.NEXT_PUBLIC_API_URL}/documents/${doc._id}/preview`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Mở trong tab mới
+              </a>
+            </div>
+            <div className="w-full" style={{ height: "700px" }}>
+              <iframe
+                src={`${process.env.NEXT_PUBLIC_API_URL}/documents/${doc._id}/preview`}
+                className="w-full h-full border-0"
+                title="Document Preview"
+              />
+            </div>
+          </div>
+        )}
+
+        {doc.fileType && !doc.fileType.includes("pdf") && (
+          <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
+            <DocumentIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="font-semibold text-gray-700 mb-2">Không hỗ trợ xem trước</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Định dạng {formatFileType(doc.fileType)} chưa hỗ trợ xem trước trực tiếp. Vui lòng tải xuống để xem nội dung.
+            </p>
+            <button
+              onClick={handleDownload}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-medium text-sm"
+            >
+              <ArrowDownTrayIcon className="w-5 h-5" />
+              Tải xuống
+            </button>
+          </div>
+        )}
+
+        {/* Uploader */}
+        <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Người đăng</h3>
           <Link
             href={`/profile/${doc.uploader?._id || ""}`}
             className="flex items-center gap-4 group"
@@ -247,10 +253,10 @@ export default function DocumentDetailPage() {
               <img
                 src={doc.uploader.avatarUrl}
                 alt={doc.uploader.fullName}
-                className="w-12 h-12 rounded-full object-cover"
+                className="w-12 h-12 rounded-xl object-cover"
               />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
                 <span className="text-white font-bold text-lg">
                   {(doc.uploader?.fullName || "?").charAt(0).toUpperCase()}
                 </span>
@@ -281,7 +287,7 @@ function InfoItem({
   subValue?: string;
 }) {
   return (
-    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
+    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
       <div className="text-blue-500 mt-0.5">{icon}</div>
       <div>
         <p className="text-xs text-gray-500 uppercase tracking-wider">{label}</p>

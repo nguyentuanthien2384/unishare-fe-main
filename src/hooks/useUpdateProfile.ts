@@ -3,6 +3,7 @@ import { toast } from "react-hot-toast";
 import { UpdateProfileDto, ChangePasswordDto } from "@/@types/user.type";
 import { useAuthStore } from "@/store/auth.store";
 import { User } from "@/@types/user.type";
+import api from "@/lib/axios";
 
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
@@ -12,7 +13,8 @@ export const useUpdateProfile = () => {
   return useMutation({
     mutationFn: async (data: UpdateProfileDto): Promise<User> => {
       if (!currentUser) throw new Error("Chưa đăng nhập");
-      return { ...currentUser, ...data };
+      const response = await api.patch("/users/me/profile", data);
+      return response.data;
     },
     onSuccess: (updatedUser) => {
       toast.success("Cập nhật thông tin thành công!");
@@ -25,16 +27,17 @@ export const useUpdateProfile = () => {
 };
 
 export const useChangePassword = () => {
-  const changePassword = useAuthStore((state) => state.changePassword);
-
   return useMutation({
     mutationFn: async (data: ChangePasswordDto): Promise<void> => {
-      changePassword(data.oldPassword, data.newPassword);
+      await api.post("/users/me/change-password", data);
     },
     onSuccess: () => {
       toast.success("Đổi mật khẩu thành công!");
     },
-    onError: (err: Error) =>
-      toast.error(err.message || "Đổi mật khẩu thất bại"),
+    onError: (err: any) => {
+      const message =
+        err?.response?.data?.message || err.message || "Đổi mật khẩu thất bại";
+      toast.error(Array.isArray(message) ? message[0] : message);
+    },
   });
 };

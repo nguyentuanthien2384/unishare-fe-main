@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { Document } from "@/@types/document.type";
 import { Menu, Transition } from "@headlessui/react";
 import {
@@ -8,11 +9,15 @@ import {
   ShareIcon,
   FlagIcon,
   DocumentIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Fragment } from "react";
 import api from "@/lib/axios";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
+import { useAuthStore } from "@/store/auth.store";
+import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface DocumentCardProps {
   doc: Document;
@@ -33,10 +38,17 @@ const formatFileType = (mimeType: string) => {
 };
 
 export default function DocumentCard({ doc, viewMode }: DocumentCardProps) {
+  const user = useAuthStore((s) => s.user);
+  const queryClient = useQueryClient();
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const isOwner = user && doc.uploader?._id === user._id;
+  const isAdminOrMod =
+    user?.role === "ADMIN" || user?.role === "MODERATOR";
+  const canDelete = isOwner || isAdminOrMod;
+
   const handlePreview = () => {
-    toast("Tính năng Preview (Xem trước) đang được phát triển!", {
-      icon: "🚧",
-    });
+    window.open(`/document/${doc._id}`, "_blank");
   };
 
   const handleShare = () => {
@@ -57,6 +69,10 @@ export default function DocumentCard({ doc, viewMode }: DocumentCardProps) {
   };
 
   const handleDownload = async () => {
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để tải xuống tài liệu.");
+      return;
+    }
     const downloadToastId = toast.loading("Đang tải xuống...");
     try {
       const response = await api.get(`/documents/${doc._id}/download`, {
@@ -82,9 +98,13 @@ export default function DocumentCard({ doc, viewMode }: DocumentCardProps) {
       link.remove();
       window.URL.revokeObjectURL(url);
       toast.success("Tải xuống thành công!", { id: downloadToastId });
-    } catch (err) {
-      console.error(err);
-      toast.error("Tải xuống thất bại.", { id: downloadToastId });
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", { id: downloadToastId });
+        useAuthStore.getState().logout();
+      } else {
+        toast.error("Tải xuống thất bại.", { id: downloadToastId });
+      }
     }
   };
 
@@ -92,25 +112,68 @@ export default function DocumentCard({ doc, viewMode }: DocumentCardProps) {
     toast("Tính năng Report (Báo cáo) đang được phát triển!", { icon: "🚧" });
   };
 
-  if (viewMode === "list") {
-    return (
+  const handleDelete = async () => {
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để thực hiện thao tác này.");
+      setIsDeleteOpen(false);
+      return;
+    }
+    const toastId = toast.loading("Đang xóa tài liệu...");
+    try {
+      if (isAdminOrMod && !isOwner) {
+        await api.delete(`/admin/documents/${doc._id}`);
+      } else {
+        await api.delete(`/documents/${doc._id}`);
+      }
+      toast.success("Đã xóa tài liệu thành công!", { id: toastId });
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["myDocuments"] });
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 401) {
+        toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", { id: toastId });
+        useAuthStore.getState().logout();
+      } else {
+        const msg =
+          err?.response?.data?.message || "Xóa tài liệu thất bại.";
+        toast.error(Array.isArray(msg) ? msg[0] : msg, { id: toastId });
+      }
+    }
+    setIsDeleteOpen(false);
+  };
+
+  const cardContent =
+    viewMode === "list" ? (
       <ListLayout
         doc={doc}
         onPreview={handlePreview}
         onShare={handleShare}
         onDownload={handleDownload}
         onReport={handleReport}
+        onDelete={canDelete ? () => setIsDeleteOpen(true) : undefined}
+      />
+    ) : (
+      <GridLayout
+        doc={doc}
+        onPreview={handlePreview}
+        onShare={handleShare}
+        onDownload={handleDownload}
+        onReport={handleReport}
+        onDelete={canDelete ? () => setIsDeleteOpen(true) : undefined}
       />
     );
-  }
+
   return (
-    <GridLayout
-      doc={doc}
-      onPreview={handlePreview}
-      onShare={handleShare}
-      onDownload={handleDownload}
-      onReport={handleReport}
-    />
+    <>
+      {cardContent}
+      <DeleteConfirmModal
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={handleDelete}
+        title="Xác nhận xóa tài liệu"
+        message={`Bạn có chắc chắn muốn xóa tài liệu "${doc.title}"? Hành động này không thể hoàn tác.`}
+      />
+    </>
   );
 }
 
@@ -120,6 +183,7 @@ interface LayoutProps {
   onShare: () => void;
   onDownload: () => void;
   onReport: () => void;
+  onDelete?: () => void;
 }
 
 const GridLayout = ({
@@ -128,6 +192,7 @@ const GridLayout = ({
   onShare,
   onDownload,
   onReport,
+  onDelete,
 }: LayoutProps) => (
   <div className="relative p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 group">
     <Link href={`/document/${doc._id}`} className="block">
@@ -150,6 +215,7 @@ const GridLayout = ({
         onShare={onShare}
         onDownload={onDownload}
         onReport={onReport}
+        onDelete={onDelete}
       />
     </div>
     <div className="flex gap-2 mt-3">
@@ -186,6 +252,7 @@ const ListLayout = ({
   onShare,
   onDownload,
   onReport,
+  onDelete,
 }: LayoutProps) => (
   <div className="relative flex items-center w-full p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 group">
     <Link href={`/document/${doc._id}`} className="flex items-center flex-1">
@@ -223,6 +290,7 @@ const ListLayout = ({
         onShare={onShare}
         onDownload={onDownload}
         onReport={onReport}
+        onDelete={onDelete}
       />
     </div>
   </div>
@@ -233,6 +301,7 @@ const DocumentMenu = ({
   onShare,
   onDownload,
   onReport,
+  onDelete,
 }: Omit<LayoutProps, "doc">) => (
   <Menu as="div" className="relative inline-block text-left">
     <Menu.Button className="p-2 rounded-full hover:bg-gray-100">
@@ -256,7 +325,7 @@ const DocumentMenu = ({
                 className={`${active ? "bg-gray-100" : ""} group flex items-center w-full px-4 py-2 text-sm text-gray-700`}
               >
                 <EyeIcon className="w-5 h-5 mr-3" />
-                Preview
+                Xem trước
               </button>
             )}
           </Menu.Item>
@@ -267,7 +336,7 @@ const DocumentMenu = ({
                 className={`${active ? "bg-gray-100" : ""} group flex items-center w-full px-4 py-2 text-sm text-gray-700`}
               >
                 <ArrowDownTrayIcon className="w-5 h-5 mr-3" />
-                Download
+                Tải xuống
               </button>
             )}
           </Menu.Item>
@@ -278,22 +347,37 @@ const DocumentMenu = ({
                 className={`${active ? "bg-gray-100" : ""} group flex items-center w-full px-4 py-2 text-sm text-gray-700`}
               >
                 <ShareIcon className="w-5 h-5 mr-3" />
-                Share
+                Chia sẻ
               </button>
             )}
           </Menu.Item>
-          <div className="my-1 h-px bg-gray-100" />
           <Menu.Item>
             {({ active }) => (
               <button
                 onClick={onReport}
-                className={`${active ? "bg-gray-100" : ""} group flex items-center w-full px-4 py-2 text-sm text-red-600`}
+                className={`${active ? "bg-gray-100" : ""} group flex items-center w-full px-4 py-2 text-sm text-gray-700`}
               >
                 <FlagIcon className="w-5 h-5 mr-3" />
-                Report
+                Báo cáo
               </button>
             )}
           </Menu.Item>
+          {onDelete && (
+            <>
+              <div className="my-1 h-px bg-gray-100" />
+              <Menu.Item>
+                {({ active }) => (
+                  <button
+                    onClick={onDelete}
+                    className={`${active ? "bg-red-50" : ""} group flex items-center w-full px-4 py-2 text-sm text-red-600`}
+                  >
+                    <TrashIcon className="w-5 h-5 mr-3" />
+                    Xóa tài liệu
+                  </button>
+                )}
+              </Menu.Item>
+            </>
+          )}
         </div>
       </Menu.Items>
     </Transition>

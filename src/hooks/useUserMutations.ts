@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "@/store/auth.store";
 import { User } from "@/@types/user.type";
+import api from "@/lib/axios";
 
 export interface UpdateProfileDto {
   fullName?: string;
@@ -16,13 +17,11 @@ export interface ChangePasswordDto {
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
   const setUser = useAuthStore((s) => s.setUser);
-  const currentUser = useAuthStore((s) => s.user);
 
   return useMutation({
     mutationFn: async (data: UpdateProfileDto): Promise<User> => {
-      if (!currentUser) throw new Error("Chưa đăng nhập");
-      const updatedUser: User = { ...currentUser, ...data };
-      return updatedUser;
+      const response = await api.patch("/users/me/profile", data);
+      return response.data;
     },
     onSuccess: (updatedUser) => {
       toast.success("Cập nhật hồ sơ thành công!");
@@ -34,14 +33,15 @@ export const useUpdateProfile = () => {
 };
 
 export const useChangePassword = () => {
-  const changePassword = useAuthStore((s) => s.changePassword);
-
   return useMutation({
     mutationFn: async (data: ChangePasswordDto): Promise<void> => {
-      changePassword(data.oldPassword, data.newPassword);
+      await api.post("/users/me/change-password", data);
     },
     onSuccess: () => toast.success("Đổi mật khẩu thành công!"),
-    onError: (err: Error) =>
-      toast.error(err.message || "Lỗi đổi mật khẩu."),
+    onError: (err: any) => {
+      const message =
+        err?.response?.data?.message || err.message || "Lỗi đổi mật khẩu.";
+      toast.error(Array.isArray(message) ? message[0] : message);
+    },
   });
 };

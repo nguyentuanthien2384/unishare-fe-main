@@ -42,8 +42,8 @@ export const useUnblockUser = () => {
 export const useResetPassword = () => {
   const resetPass = useAdminStore((s) => s.resetPassword);
   const mutate = useCallback(
-    (userId: string) => {
-      const result = resetPass(userId);
+    async (userId: string) => {
+      const result = await resetPass(userId);
       toast.success(`${result.message}\nMật khẩu mới là: ${result.newPassword}`, {
         duration: 10000,
       });

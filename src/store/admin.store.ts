@@ -24,7 +24,7 @@ interface AdminState {
 
   fetchSubjects: () => Promise<void>;
   fetchMajors: () => Promise<void>;
-  fetchUsers: (search?: string) => Promise<void>;
+  fetchUsers: (search?: string, role?: string, sortBy?: string) => Promise<void>;
   fetchDocuments: (search?: string) => Promise<void>;
 
   addSubject: (s: Omit<Subject, "_id">) => Promise<void>;
@@ -59,8 +59,12 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     const res = await api.get("/admin/majors");
     set({ majors: res.data });
   },
-  fetchUsers: async (search?: string) => {
-    const res = await api.get("/admin/users", { params: { search, limit: 100 } });
+  fetchUsers: async (search?: string, role?: string, sortBy?: string) => {
+    const params: Record<string, unknown> = { limit: 100 };
+    if (search) params.search = search;
+    if (role) params.role = role;
+    if (sortBy) params.sortBy = sortBy;
+    const res = await api.get("/admin/users", { params });
     set({ users: res.data.data });
   },
   fetchDocuments: async (search?: string) => {

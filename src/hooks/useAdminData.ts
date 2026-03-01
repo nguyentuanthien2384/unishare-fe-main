@@ -51,13 +51,17 @@ export const useAdminDocuments = (search: string) => {
   return { data: result, isLoading: false };
 };
 
-export const useAdminUsers = (search: string) => {
+export const useAdminUsers = (
+  search: string,
+  role?: string,
+  sortBy?: string,
+) => {
   const users = useAdminStore((s) => s.users);
   const fetchUsers = useAdminStore((s) => s.fetchUsers);
 
   useEffect(() => {
-    fetchUsers(search);
-  }, [search, fetchUsers]);
+    fetchUsers(search, role, sortBy);
+  }, [search, role, sortBy, fetchUsers]);
 
   const result: AdminUsersResponse = useMemo(
     () => ({

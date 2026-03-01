@@ -10,20 +10,34 @@ const api = axios.create({
   },
 });
 
-// Cấu hình "Interceptor" (Người can thiệp)
-// Đoạn code này sẽ chạy *trước khi* bất kỳ request nào được gửi đi
 api.interceptors.request.use(
   (config) => {
-    // Lấy token từ Zustand store (lấy trực tiếp state)
     const token = useAuthStore.getState().token;
 
     if (token) {
-      // Nếu có token, gắn nó vào header Authorization
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
+
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  },
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      const store = useAuthStore.getState();
+      if (store.isAuthenticated) {
+        store.logout();
+      }
+    }
     return Promise.reject(error);
   },
 );

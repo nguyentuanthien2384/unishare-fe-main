@@ -20,11 +20,7 @@ const uploadDocument = async (payload: UploadPayload) => {
     formData.append(key, metadata[key] as string);
   });
 
-  const response = await api.post("/documents/upload", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  const response = await api.post("/documents/upload", formData);
 
   return response.data;
 };

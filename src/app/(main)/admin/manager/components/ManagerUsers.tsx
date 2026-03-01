@@ -1,4 +1,3 @@
-// src/app/admin/manage/components/ManageUsers.tsx
 "use client";
 import { useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -12,34 +11,62 @@ import {
 import { User } from "@/@types/user.type";
 import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
 import RoleGuard from "@/components/auth/RoleGuard";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/axios";
+import { toast } from "react-hot-toast";
+import { useAuthStore } from "@/store/auth.store";
+import { useRouter } from "next/navigation";
 
 function ManageUsersContent() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+  const [sortBy, setSortBy] = useState("joinedDate");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const queryClient = useQueryClient();
+  const logout = useAuthStore((s) => s.logout);
+  const router = useRouter();
 
-  // Fetch users
-  const { data: usersData, isLoading } = useAdminUsers(debouncedSearchTerm);
+  const { data: usersData, isLoading } = useAdminUsers(
+    debouncedSearchTerm,
+    roleFilter,
+    sortBy,
+  );
 
-  // Mutations
   const roleMutation = useUpdateUserRole();
   const blockMutation = useBlockUser();
   const unblockMutation = useUnblockUser();
   const resetPassMutation = useResetPassword();
 
-  // Modal state
+  const delegateAdminMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const res = await api.post(`/admin/delegate-admin/${targetUserId}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Ủy quyền Admin thành công! Bạn sẽ được đăng xuất.");
+      queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
+      setTimeout(() => {
+        logout();
+        router.push("/login");
+      }, 1500);
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || "Ủy quyền thất bại.";
+      toast.error(Array.isArray(msg) ? msg[0] : msg);
+    },
+  });
+
   const [modalState, setModalState] = useState<{
-    action: "block" | "unblock";
+    action: "block" | "unblock" | "delegate";
     user: User;
   } | null>(null);
 
-  // ✅ Handle Reset Password
   const handleResetPassword = (user: User) => {
     if (window.confirm(`Reset mật khẩu cho ${user.email}?`)) {
       resetPassMutation.mutate(user._id);
     }
   };
 
-  // ✅ Handle Confirm Action (Block/Unblock)
   const handleConfirmAction = () => {
     if (!modalState) return;
     const { action, user } = modalState;
@@ -48,6 +75,8 @@ function ManageUsersContent() {
       blockMutation.mutate(user._id);
     } else if (action === "unblock") {
       unblockMutation.mutate(user._id);
+    } else if (action === "delegate") {
+      delegateAdminMutation.mutate(user._id);
     }
 
     setModalState(null);
@@ -55,16 +84,36 @@ function ManageUsersContent() {
 
   return (
     <div>
-      <h3 className="text-xl font-semibold mb-4">Tìm kiếm người dùng</h3>
-      <input
-        type="text"
-        placeholder="Tìm user theo tên hoặc email..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm mb-4"
-      />
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <input
+          type="text"
+          placeholder="Tìm user theo tên hoặc email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        />
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+        >
+          <option value="">Tất cả vai trò</option>
+          <option value="USER">User</option>
+          <option value="MODERATOR">Moderator</option>
+          <option value="ADMIN">Admin</option>
+        </select>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+        >
+          <option value="joinedDate">Ngày tham gia</option>
+          <option value="downloadsCount">Lượt tải xuống</option>
+          <option value="uploadsCount">Số uploads</option>
+          <option value="fullName">Tên</option>
+        </select>
+      </div>
 
-      {/* Bảng hiển thị user */}
       <div className="overflow-x-auto border rounded-lg">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -74,6 +123,9 @@ function ManageUsersContent() {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Vai trò
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Uploads / Downloads
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Trạng thái
@@ -86,14 +138,14 @@ function ManageUsersContent() {
           <tbody className="bg-white divide-y divide-gray-200">
             {isLoading && (
               <tr>
-                <td colSpan={4} className="p-4 text-center text-gray-500">
+                <td colSpan={5} className="p-4 text-center text-gray-500">
                   Đang tải...
                 </td>
               </tr>
             )}
             {!isLoading && usersData?.data.length === 0 && (
               <tr>
-                <td colSpan={4} className="p-4 text-center text-gray-500">
+                <td colSpan={5} className="p-4 text-center text-gray-500">
                   Không tìm thấy user nào
                 </td>
               </tr>
@@ -119,6 +171,15 @@ function ManageUsersContent() {
                     {user.role}
                   </span>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <span className="text-blue-600 font-medium">
+                    {user.uploadsCount ?? 0}
+                  </span>
+                  {" / "}
+                  <span className="text-green-600 font-medium">
+                    {user.downloadsCount ?? 0}
+                  </span>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {user.status === "ACTIVE" ? (
                     <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
@@ -131,8 +192,7 @@ function ManageUsersContent() {
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex justify-end gap-2">
-                    {/* Nút Thăng/Giáng cấp */}
+                  <div className="flex justify-end gap-2 flex-wrap">
                     {user.role === "USER" && (
                       <button
                         onClick={() =>
@@ -147,45 +207,59 @@ function ManageUsersContent() {
                       </button>
                     )}
                     {user.role === "MODERATOR" && (
-                      <button
-                        onClick={() =>
-                          roleMutation.mutate({
-                            userId: user._id,
-                            role: "USER",
-                          })
-                        }
-                        className="text-yellow-600 hover:text-yellow-900 hover:underline"
-                      >
-                        Giáng cấp
-                      </button>
+                      <>
+                        <button
+                          onClick={() =>
+                            roleMutation.mutate({
+                              userId: user._id,
+                              role: "USER",
+                            })
+                          }
+                          className="text-yellow-600 hover:text-yellow-900 hover:underline"
+                        >
+                          Giáng cấp
+                        </button>
+                        <button
+                          onClick={() =>
+                            setModalState({ action: "delegate", user })
+                          }
+                          className="text-purple-600 hover:text-purple-900 hover:underline"
+                        >
+                          Ủy quyền Admin
+                        </button>
+                      </>
                     )}
 
-                    {/* Nút Block/Unblock */}
-                    {user.status === "ACTIVE" ? (
-                      <button
-                        onClick={() => setModalState({ action: "block", user })}
-                        className="text-red-600 hover:text-red-900 hover:underline"
-                      >
-                        Khóa
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() =>
-                          setModalState({ action: "unblock", user })
-                        }
-                        className="text-green-600 hover:text-green-900 hover:underline"
-                      >
-                        Mở khóa
-                      </button>
-                    )}
+                    {user.role !== "ADMIN" && (
+                      <>
+                        {user.status === "ACTIVE" ? (
+                          <button
+                            onClick={() =>
+                              setModalState({ action: "block", user })
+                            }
+                            className="text-red-600 hover:text-red-900 hover:underline"
+                          >
+                            Khóa
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              setModalState({ action: "unblock", user })
+                            }
+                            className="text-green-600 hover:text-green-900 hover:underline"
+                          >
+                            Mở khóa
+                          </button>
+                        )}
 
-                    {/* Nút Reset Password */}
-                    <button
-                      onClick={() => handleResetPassword(user)}
-                      className="text-gray-600 hover:text-gray-900 hover:underline"
-                    >
-                      Reset Pass
-                    </button>
+                        <button
+                          onClick={() => handleResetPassword(user)}
+                          className="text-gray-600 hover:text-gray-900 hover:underline"
+                        >
+                          Reset Pass
+                        </button>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -194,15 +268,20 @@ function ManageUsersContent() {
         </table>
       </div>
 
-      {/* Modal xác nhận Block/Unblock */}
       <DeleteConfirmModal
         isOpen={!!modalState}
         onClose={() => setModalState(null)}
         onConfirm={handleConfirmAction}
-        title={`Xác nhận ${modalState?.action === "block" ? "Khóa" : "Mở khóa"} User`}
-        message={`Bạn có chắc muốn ${
-          modalState?.action === "block" ? "khóa" : "mở khóa"
-        } người dùng "${modalState?.user.email}"?`}
+        title={
+          modalState?.action === "delegate"
+            ? "Xác nhận ủy quyền Admin"
+            : `Xác nhận ${modalState?.action === "block" ? "Khóa" : "Mở khóa"} User`
+        }
+        message={
+          modalState?.action === "delegate"
+            ? `Bạn có chắc muốn ủy quyền Admin cho "${modalState?.user.fullName}"? Bạn sẽ trở thành Moderator và bị đăng xuất.`
+            : `Bạn có chắc muốn ${modalState?.action === "block" ? "khóa" : "mở khóa"} người dùng "${modalState?.user.email}"?`
+        }
       />
     </div>
   );

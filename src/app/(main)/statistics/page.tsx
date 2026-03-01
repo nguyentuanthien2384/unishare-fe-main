@@ -1,73 +1,139 @@
 "use client";
-import { useState } from "react"; // <-- Import useState
+import { useState } from "react";
 import RoleGuard from "@/components/auth/RoleGuard";
 import UploadsOverTimeChart from "@/components/statistics/UploadsOverTimeChart";
 import { usePlatformStats } from "@/hooks/usePlatformStats";
+import {
+  CloudArrowUpIcon,
+  ArrowDownTrayIcon,
+  UsersIcon,
+  DocumentTextIcon,
+} from "@heroicons/react/24/outline";
 
-// Component thẻ stat nhỏ (giữ nguyên)
-function StatCard({ title, value }: { title: string; value: number | string }) {
+function StatCard({
+  title,
+  value,
+  icon: Icon,
+  color,
+  bgColor,
+}: {
+  title: string;
+  value: number | string;
+  icon: typeof CloudArrowUpIcon;
+  color: string;
+  bgColor: string;
+}) {
   return (
-    <div className="flex-1 p-6 bg-white rounded-lg shadow-md">
-      <div className="text-sm text-gray-500 uppercase">{title}</div>
-      <div className="mt-2 text-3xl font-bold">{value}</div>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+      <div className="flex items-center gap-4">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${bgColor}`}>
+          <Icon className={`w-6 h-6 ${color}`} />
+        </div>
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">{title}</p>
+          <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
+        </div>
+      </div>
     </div>
   );
 }
 
 function StatisticsPageContent() {
   const { data: stats, isLoading } = usePlatformStats();
-  // --- THÊM STATE MỚI ---
-  const [days, setDays] = useState(30); // Mặc định là 30 ngày
-  // --- KẾT THÚC ---
+  const [days, setDays] = useState(30);
 
-  if (isLoading) return <p>Đang tải thống kê...</p>;
-  if (!stats) return <p>Không có dữ liệu.</p>;
-
-  return (
-    <div>
-      <h1 className="text-3xl font-bold">Statistics</h1>
-      <p className="mt-1 text-gray-600">Platform analytics and insights</p>
-
-      {/* 4 Thẻ Stats (giữ nguyên) */}
-      <div className="flex gap-6 mt-8">
-        <StatCard title="Total Uploads" value={stats.totalUploads} />
-        <StatCard title="Total Downloads" value={stats.totalDownloads} />
-        <StatCard title="Active Users" value={stats.activeUsers} />
-        <StatCard title="Avg DL/Doc" value={stats.avgDlPerDoc} />
-      </div>
-
-      {/* Biểu đồ */}
-      <div className="mt-10 p-6 bg-white rounded-lg shadow-lg">
-        {/* --- THÊM CÁC NÚT LỌC --- */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Uploads Over Time</h2>
-          <div className="flex gap-2">
-            {[7, 30, 90].map((d) => (
-              <button
-                key={d}
-                onClick={() => setDays(d)}
-                className={`px-3 py-1 text-sm font-medium rounded-full ${
-                  days === d
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {d} days
-              </button>
+  if (isLoading) {
+    return (
+      <div className="flex-1 p-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-1/3" />
+          <div className="grid grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-28 bg-gray-200 rounded-xl" />
             ))}
           </div>
+          <div className="h-80 bg-gray-200 rounded-xl" />
         </div>
-        {/* --- KẾT THÚC --- */}
-        <div className="mt-4">
-          {/* Truyền 'days' vào component biểu đồ */}
+      </div>
+    );
+  }
+
+  if (!stats) return <div className="flex-1 p-8">Không có dữ liệu.</div>;
+
+  return (
+    <main className="flex-1 p-6 bg-gray-50">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Thống kê hệ thống</h1>
+          <p className="mt-1 text-gray-500">Phân tích và thống kê hoạt động nền tảng</p>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <StatCard
+            title="Tổng uploads"
+            value={stats.totalUploads}
+            icon={CloudArrowUpIcon}
+            color="text-blue-600"
+            bgColor="bg-blue-50"
+          />
+          <StatCard
+            title="Tổng downloads"
+            value={stats.totalDownloads}
+            icon={ArrowDownTrayIcon}
+            color="text-green-600"
+            bgColor="bg-green-50"
+          />
+          <StatCard
+            title="Người dùng hoạt động"
+            value={stats.activeUsers}
+            icon={UsersIcon}
+            color="text-purple-600"
+            bgColor="bg-purple-50"
+          />
+          <StatCard
+            title="TB tải/tài liệu"
+            value={stats.avgDlPerDoc}
+            icon={DocumentTextIcon}
+            color="text-orange-600"
+            bgColor="bg-orange-50"
+          />
+        </div>
+
+        {/* Chart */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Uploads theo thời gian</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Biểu đồ số lượng tài liệu được tải lên</p>
+            </div>
+            <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+              {[
+                { d: 7, label: "7 ngày" },
+                { d: 30, label: "30 ngày" },
+                { d: 90, label: "90 ngày" },
+              ].map(({ d, label }) => (
+                <button
+                  key={d}
+                  onClick={() => setDays(d)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
+                    days === d
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
           <UploadsOverTimeChart days={days} />
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
-// Bọc trang bằng RoleGuard (giữ nguyên)
 export default function StatisticsPage() {
   return (
     <RoleGuard allowedRoles={["ADMIN", "MODERATOR"]}>
