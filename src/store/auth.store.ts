@@ -34,8 +34,6 @@ export const useAuthStore = create(
           set({ user, token: accessToken, isAuthenticated: true });
           toast.success("Đăng nhập thành công!");
         } catch (error: unknown) {
-          const err = error as { response?: { data?: { message?: string } } };
-          toast.error(err.response?.data?.message || "Đăng nhập thất bại!");
           throw error;
         }
       },

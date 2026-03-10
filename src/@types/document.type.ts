@@ -33,6 +33,7 @@ export interface Document {
 
   documentType: string;
   schoolYear: string;
+  thumbnailUrl?: string;
   downloadCount: number;
   viewCount: number;
   uploadDate: string; // (Date sẽ được trả về dưới dạng string)

@@ -62,7 +62,9 @@ export default function HomePage() {
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <DocumentIcon className="w-8 h-8 text-red-500" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Lỗi khi tải tài liệu</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Lỗi khi tải tài liệu
+          </h2>
           <p className="mt-1 text-sm text-gray-500">Vui lòng thử lại sau</p>
         </div>
       </main>
@@ -82,8 +84,20 @@ export default function HomePage() {
         {isFetching && (
           <div className="absolute top-4 right-4 flex items-center gap-2 text-xs text-gray-500 bg-white px-3 py-1.5 rounded-full shadow-sm border">
             <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="none"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
             </svg>
             Đang cập nhật...
           </div>
@@ -108,8 +122,18 @@ export default function HomePage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <SortDropdown label="Sắp xếp" options={sortByOptions} value={sortBy} onChange={setSortBy} />
-            <SortDropdown label="Thứ tự" options={sortOrderOptions} value={sortOrder} onChange={setSortOrder} />
+            <SortDropdown
+              label="Sắp xếp"
+              options={sortByOptions}
+              value={sortBy}
+              onChange={setSortBy}
+            />
+            <SortDropdown
+              label="Thứ tự"
+              options={sortOrderOptions}
+              value={sortOrder}
+              onChange={setSortOrder}
+            />
             <div className="flex p-0.5 bg-gray-200 rounded-lg">
               <button
                 onClick={() => setViewMode("grid")}
@@ -127,7 +151,9 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className={`transition-opacity ${isFetching ? "opacity-50" : "opacity-100"}`}>
+        <div
+          className={`transition-opacity ${isFetching ? "opacity-50" : "opacity-100"}`}
+        >
           <div
             className={
               viewMode === "grid"
@@ -141,8 +167,12 @@ export default function HomePage() {
             {data?.data.length === 0 && (
               <div className="col-span-full text-center py-16">
                 <DocumentIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 font-medium">Không tìm thấy tài liệu nào</p>
-                <p className="text-sm text-gray-400 mt-1">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+                <p className="text-gray-500 font-medium">
+                  Không tìm thấy tài liệu nào
+                </p>
+                <p className="text-sm text-gray-400 mt-1">
+                  Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm
+                </p>
               </div>
             )}
           </div>

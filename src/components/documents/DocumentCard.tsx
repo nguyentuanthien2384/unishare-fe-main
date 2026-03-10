@@ -196,11 +196,19 @@ const GridLayout = ({
 }: LayoutProps) => (
   <div className="relative p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 group">
     <Link href={`/document/${doc._id}`} className="block">
-      <div className="h-32 flex items-center justify-center bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
-        <span className="absolute top-2 left-2 px-2 py-1 text-xs font-semibold text-blue-800 uppercase bg-blue-100 rounded">
+      <div className="h-40 flex items-center justify-center bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors overflow-hidden relative">
+        <span className="absolute top-2 left-2 z-[1] px-2 py-1 text-xs font-semibold text-blue-800 uppercase bg-blue-100 rounded">
           {formatFileType(doc.fileType || "application/pdf")}
         </span>
-        <DocumentIcon className="w-12 h-12 text-blue-500" />
+        {doc.thumbnailUrl ? (
+          <img
+            src={doc.thumbnailUrl}
+            alt={doc.title}
+            className="absolute inset-0 w-full h-full object-cover object-top"
+          />
+        ) : (
+          <DocumentIcon className="w-12 h-12 text-blue-500" />
+        )}
       </div>
       <h3 className="mt-4 text-lg font-semibold truncate text-gray-900 group-hover:text-blue-600 transition-colors">
         {doc.title}
@@ -256,8 +264,16 @@ const ListLayout = ({
 }: LayoutProps) => (
   <div className="relative flex items-center w-full p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 group">
     <Link href={`/document/${doc._id}`} className="flex items-center flex-1">
-      <div className="flex items-center justify-center w-16 h-16 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
-        <DocumentIcon className="w-8 h-8 text-blue-500" />
+      <div className="relative flex items-center justify-center w-16 h-16 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors overflow-hidden flex-shrink-0">
+        {doc.thumbnailUrl ? (
+          <img
+            src={doc.thumbnailUrl}
+            alt={doc.title}
+            className="absolute inset-0 w-full h-full object-cover object-top"
+          />
+        ) : (
+          <DocumentIcon className="w-8 h-8 text-blue-500" />
+        )}
       </div>
       <div className="flex-1 mx-4">
         <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
